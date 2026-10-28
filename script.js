@@ -21,7 +21,7 @@ const modalBody = document.getElementById('modalBody');
 let carData = [];
 let filteredData = [];
 
-// Fallback Data jika API bermasalah/offline saat pengetesan
+// Fallback Data berkualitas tinggi jika API offline / gambar dari API kosong
 const fallbackCars = [
     {
         id: 1,
@@ -78,13 +78,25 @@ async function fetchCarData() {
         const data = await response.json();
         
         // Handle struktur respons API
+        let rawCars = [];
         if (Array.isArray(data)) {
-            carData = data;
+            rawCars = data;
         } else if (data && Array.isArray(data.data)) {
-            carData = data.data;
+            rawCars = data.data;
         } else {
-            carData = fallbackCars;
+            rawCars = fallbackCars;
         }
+
+        // Mapping data agar properti gambar dan nama aman dibaca (mendukung berbagai variasi nama key dari API)
+        carData = rawCars.map((car, index) => ({
+            id: car.id || index + 1,
+            nama: car.nama || car.name || car.model || 'Mobil Premium',
+            merk: car.merk || car.brand || car.manufacturer || 'Showroom',
+            harga: Number(car.harga || car.price || 1500000000),
+            // Cek berbagai kemungkinan nama key gambar dari API, jika kosong/tidak ada gunakan Unsplash default
+            gambar: car.gambar || car.image || car.photo || car.image_url || car.foto || 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=800&q=80',
+            deskripsi: car.deskripsi || car.description || 'Mobil berkualitas tinggi dengan performa tangguh dan desain modern.'
+        }));
 
         if (carData.length === 0) {
             carData = fallbackCars;
@@ -118,15 +130,15 @@ function renderCarCards(cars) {
     emptyState.classList.add('hidden');
 
     cars.forEach(car => {
-        // Element creation dengan createElement & innerHTML
         const card = document.createElement('div');
         card.className = 'car-card';
 
-        const formattedPrice = formatRupiah(car.harga || 1500000000);
-        const carImg = car.gambar || car.image_url || 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=800&q=80';
-        const carBrand = car.merk || car.brand || 'Premium';
-        const carName = car.nama || car.name || 'Mobil Sport';
+        const formattedPrice = formatRupiah(car.harga);
+        const carImg = car.gambar;
+        const carBrand = car.merk;
+        const carName = car.nama;
 
+        // Menggunakan event 'onerror' pada tag img agar jika URL gambar dari API broken/tidak valid, otomatis diganti gambar cadangan
         card.innerHTML = `
             <div class="car-card-img-wrapper">
                 <span class="car-brand-tag">${carBrand}</span>
@@ -140,7 +152,7 @@ function renderCarCards(cars) {
                 </div>
                 <div class="car-price-row">
                     <span class="car-price">${formattedPrice}</span>
-                    <button class="btn btn-outline btn-sm view-detail-btn" data-id="${car.id}">Detail</button>
+                    <button class="btn btn-outline btn-sm view-detail-btn">Detail</button>
                 </div>
             </div>
         `;
@@ -154,7 +166,7 @@ function renderCarCards(cars) {
 }
 
 function populateBrandFilter(cars) {
-    const brands = ['all', ...new Set(cars.map(c => c.merk || c.brand).filter(Boolean))];
+    const brands = ['all', ...new Set(cars.map(c => c.merk).filter(Boolean))];
     brandFilter.innerHTML = '';
     brands.forEach(b => {
         const option = document.createElement('option');
@@ -171,19 +183,19 @@ function filterAndSortData() {
     const sortVal = sortFilter.value;
 
     filteredData = carData.filter(car => {
-        const nameMatch = (car.nama || car.name || '').toLowerCase().includes(searchVal);
-        const brandMatch = (car.merk || car.brand || '').toLowerCase().includes(searchVal);
+        const nameMatch = car.nama.toLowerCase().includes(searchVal);
+        const brandMatch = car.merk.toLowerCase().includes(searchVal);
         const matchesSearch = nameMatch || brandMatch;
-        const matchesBrand = brandVal === 'all' || (car.merk || car.brand) === brandVal;
+        const matchesBrand = brandVal === 'all' || car.merk === brandVal;
         return matchesSearch && matchesBrand;
     });
 
     if (sortVal === 'price-asc') {
-        filteredData.sort((a, b) => (a.harga || 0) - (b.harga || 0));
+        filteredData.sort((a, b) => a.harga - b.harga);
     } else if (sortVal === 'price-desc') {
-        filteredData.sort((a, b) => (b.harga || 0) - (a.harga || 0));
+        filteredData.sort((a, b) => b.harga - a.harga);
     } else if (sortVal === 'name-asc') {
-        filteredData.sort((a, b) => (a.nama || a.name || '').localeCompare(b.nama || b.name || ''));
+        filteredData.sort((a, b) => a.nama.localeCompare(b.nama));
     }
 
     renderCarCards(filteredData);
@@ -191,18 +203,14 @@ function filterAndSortData() {
 
 /* Modal Detail Logic */
 function openDetailModal(car) {
-    const formattedPrice = formatRupiah(car.harga || 1500000000);
-    const carImg = car.gambar || car.image_url || 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=800&q=80';
-    const carBrand = car.merk || car.brand || 'Premium';
-    const carName = car.nama || car.name || 'Mobil Sport';
-    const carDesc = car.deskripsi || car.description || 'Mobil performa tinggi dengan teknologi terkini dan kenyamanan luar biasa untuk perjalanan Anda.';
-
+    const formattedPrice = formatRupiah(car.harga);
+    
     modalBody.innerHTML = `
-        <img src="${carImg}" alt="${carName}" class="modal-img">
-        <span class="badge">${carBrand}</span>
-        <h2 class="modal-title">${carName}</h2>
+        <img src="${car.gambar}" alt="${car.nama}" class="modal-img" onerror="this.src='https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=800&q=80'">
+        <span class="badge">${car.merk}</span>
+        <h2 class="modal-title">${car.nama}</h2>
         <div class="modal-price">${formattedPrice}</div>
-        <p class="modal-desc">${carDesc}</p>
+        <p class="modal-desc">${car.deskripsi}</p>
         <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
             <button class="btn btn-primary" onclick="alert('Permintaan Test Drive berhasil diajukan!')">
                 <i class="fa-solid fa-key"></i> Ajukan Test Drive
@@ -277,7 +285,6 @@ function initStarsCanvas() {
         height = starsCanvas.height = window.innerHeight;
     });
 
-    // Generate Bintang Kecil
     const stars = Array.from({ length: 90 }, () => ({
         x: Math.random() * width,
         y: Math.random() * height,
@@ -286,7 +293,6 @@ function initStarsCanvas() {
         speed: Math.random() * 0.015 + 0.005
     }));
 
-    // Bintang Jatuh
     let shootingStar = null;
 
     function createShootingStar() {
@@ -300,12 +306,10 @@ function initStarsCanvas() {
         };
     }
 
-    // Loop Animasi Canvas
     function animate() {
         ctx.clearRect(0, 0, width, height);
 
         if (document.body.classList.contains('dark-theme')) {
-            // Render Bintang Kedip
             stars.forEach(star => {
                 star.alpha += star.speed;
                 if (star.alpha > 1 || star.alpha < 0) star.speed = -star.speed;
@@ -316,12 +320,10 @@ function initStarsCanvas() {
                 ctx.fill();
             });
 
-            // Random pemicu bintang jatuh
             if (!shootingStar && Math.random() < 0.008) {
                 createShootingStar();
             }
 
-            // Render Bintang Jatuh
             if (shootingStar) {
                 const rad = (shootingStar.angle * Math.PI) / 180;
                 const endX = shootingStar.x - shootingStar.length * Math.cos(rad);
