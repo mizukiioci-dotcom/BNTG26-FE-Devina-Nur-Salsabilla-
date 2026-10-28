@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoVibe - Showroom Mobil Modern</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="light-theme">
+    <!-- Canvas background untuk animasi bintang di mode gelap -->
+    <canvas id="starsCanvas"></canvas>
+
+    <!-- Header / Navbar -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a href="#" class="logo">
+                <i class="fa-solid fa-car-side"></i> Auto<span>Vibe</span>
+            </a>
+            <nav class="nav-links">
+                <a href="#home" class="active">Beranda</a>
+                <a href="#catalog">Katalog Mobil</a>
+                <a href="#features">Keunggulan</a>
+                <a href="#about">Tentang Kami</a>
+            </nav>
+            <div class="nav-actions">
+                <button id="themeToggle" class="theme-toggle-btn" aria-label="Ganti Tema">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+                <a href="#catalog" class="btn btn-primary">Lihat Koleksi</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="container hero-container">
+            <div class="hero-content">
+                <span class="badge">Showroom Mobil Masa Depan</span>
+                <h1>Temukan Mobil Impian Anda dengan Sensasi Mewah</h1>
+                <p>Jelajahi berbagai pilihan mobil terbaik dengan spesifikasi terlengkap, harga transparan, dan pelayanan istimewa.</p>
+                <div class="hero-buttons">
+                    <a href="#catalog" class="btn btn-primary btn-lg"><i class="fa-solid fa-compass"></i> Jelajahi Katalog</a>
+                    <a href="#about" class="btn btn-outline btn-lg"><i class="fa-solid fa-circle-info"></i> Pelajari Lebih Lanjut</a>
+                </div>
+                <div class="stats-container">
+                    <div class="stat-item">
+                        <h3>500+</h3>
+                        <p>Mobil Tersedia</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3>98%</h3>
+                        <p>Kepuasan Pelanggan</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3>24/7</h3>
+                        <p>Dukungan Layanan</p>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-image-wrapper">
+                <div class="hero-card-glow"></div>
+                <img src="https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&w=800&q=80" alt="Mobil Mewah AutoVibe" class="hero-img">
+            </div>
+        </div>
+    </section>
+
+    <!-- Catalog Section -->
+    <section id="catalog" class="catalog-section">
+        <div class="container">
+            <div class="section-title">
+                <h2>Katalog Mobil Impian</h2>
+                <p>Data mobil diambil secara langsung secara real-time dari API DNCC</p>
+            </div>
+
+            <!-- Search & Filter Controls -->
+            <div class="filter-card">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="searchInput" placeholder="Cari nama mobil, merk, atau tipe...">
+                </div>
+                <div class="filter-controls">
+                    <div class="select-wrapper">
+                        <select id="brandFilter">
+                            <option value="all">Semua Merk</option>
+                        </select>
+                    </div>
+                    <div class="select-wrapper">
+                        <select id="sortFilter">
+                            <option value="default">Urutkan: Bawaan</option>
+                            <option value="price-asc">Harga: Terendah ke Tertinggi</option>
+                            <option value="price-desc">Harga: Tertinggi ke Terendah</option>
+                            <option value="name-asc">Nama: A - Z</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div id="loadingSpinner" class="spinner-container">
+                <div class="spinner"></div>
+                <p>Mengambil data mobil dari API...</p>
+            </div>
+
+            <!-- Error Notification -->
+            <div id="errorMessage" class="error-container hidden">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <p id="errorText">Gagal memuat data dari server API.</p>
+                <button id="retryBtn" class="btn btn-outline btn-sm">Coba Lagi</button>
+            </div>
+
+            <!-- Car Cards Container -->
+            <div id="carGrid" class="car-grid"></div>
+
+            <!-- Empty Data State -->
+            <div id="emptyState" class="empty-state hidden">
+                <i class="fa-solid fa-car-tunnel"></i>
+                <h3>Mobil Tidak Ditemukan</h3>
+                <p>Coba kata kunci pencarian lain atau ubah filter Anda.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features-section">
+        <div class="container">
+            <div class="section-title">
+                <h2>Mengapa Memilih AutoVibe?</h2>
+                <p>Komitmen kami dalam memberikan pengalaman transaksi otomotif terbaik</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                    <h3>Garansi Resmi 100%</h3>
+                    <p>Semua unit kendaraan dijamin kualitasnya dengan inspeksi ketat 150+ titik uji standard resmi.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fa-solid fa-bolt"></i></div>
+                    <h3>Proses Cepat & Mudah</h3>
+                    <p>Pengurusan dokumen legalitas dan serah terima kendaraan diproses transparan dan fleksibel.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+                    <h3>Penawaran Harga Terbaik</h3>
+                    <p>Dapatkan harga kompetitif dengan skema cicilan ringan dan bunga terjangkau sesuai kebutuhan.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Detail Modal -->
+    <div id="detailModal" class="modal-backdrop hidden">
+        <div class="modal-card">
+            <button id="closeModal" class="modal-close-btn">&times;</button>
+            <div class="modal-body" id="modalBody">
+                <!-- Content injected dynamically via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer id="about" class="footer">
+        <div class="container footer-container">
+            <div class="footer-brand">
+                <a href="#" class="logo">
+                    <i class="fa-solid fa-car-side"></i> Auto<span>Vibe</span>
+                </a>
+                <p>Tugas Akhir BTNG Kelas Frontend - Universitas Dian Nuswantoro 2026.</p>
+            </div>
+            <div class="footer-links">
+                <h4>Navigasi</h4>
+                <ul>
+                    <li><a href="#home">Beranda</a></li>
+                    <li><a href="#catalog">Katalog Mobil</a></li>
+                    <li><a href="#features">Keunggulan</a></li>
+                </ul>
+            </div>
+            <div class="footer-links">
+                <h4>Teknologi</h4>
+                <ul>
+                    <li>HTML5 & CSS3 Native</li>
+                    <li>Vanilla JavaScript (ES6+)</li>
+                    <li>Fetch API DNCC</li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 AutoVibe BTNG Frontend. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Custom JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>
