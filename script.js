@@ -1,6 +1,9 @@
 /* API Endpoint Panitia */
 const API_URL = 'https://api-web.dnccudinus.org/api/mobil';
 
+// Gambar Vektor Mobil Cadangan Terjamin (Offline SVG Base64)
+const SAFE_SVG_CAR = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500"><rect width="100%" height="100%" fill="%231e293b"/><path d="M150 320 L220 220 L580 220 L680 320 Z" fill="%23334155"/><path d="M250 220 L300 150 L500 150 L550 220 Z" fill="%232563eb" opacity="0.8"/><circle cx="230" cy="320" r="45" fill="%230f172a" stroke="%2338bdf8" stroke-width="8"/><circle cx="570" cy="320" r="45" fill="%230f172a" stroke="%2338bdf8" stroke-width="8"/><text x="400" y="390" fill="%23f8fafc" font-size="28" font-family="sans-serif" font-weight="bold" text-anchor="middle">AutoVibe Premium</text></svg>`;
+
 // Elements Selector
 const themeToggleBtn = document.getElementById('themeToggle');
 const starsCanvas = document.getElementById('starsCanvas');
@@ -16,12 +19,13 @@ const emptyState = document.getElementById('emptyState');
 const detailModal = document.getElementById('detailModal');
 const closeModal = document.getElementById('closeModal');
 const modalBody = document.getElementById('modalBody');
+const heroImg = document.getElementById('heroImg');
 
 // State Management
 let carData = [];
 let filteredData = [];
 
-// Fallback Data berkualitas tinggi jika API offline / gambar dari API kosong
+// Fallback Data berkualitas tinggi jika API offline
 const fallbackCars = [
     {
         id: 1,
@@ -61,9 +65,18 @@ const fallbackCars = [
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     initStarsCanvas();
+    setupHeroImageFallback();
     fetchCarData();
     setupEventListeners();
 });
+
+function setupHeroImageFallback() {
+    if (heroImg) {
+        heroImg.onerror = () => {
+            heroImg.src = SAFE_SVG_CAR;
+        };
+    }
+}
 
 /* =========================================
    1. INTEGRASI API & FETCH DATA (WAJIB BTNG)
@@ -71,13 +84,17 @@ document.addEventListener('DOMContentLoaded', () => {
 async function fetchCarData() {
     showLoading();
     try {
-        const response = await fetch(API_URL);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000); // 4 detik timeout
+
+        const response = await fetch(API_URL, { signal: controller.signal });
+        clearTimeout(timeoutId);
+
         if (!response.ok) {
             throw new Error(`HTTP Error: ${response.status}`);
         }
         const data = await response.json();
         
-        // Handle struktur respons API
         let rawCars = [];
         if (Array.isArray(data)) {
             rawCars = data;
@@ -87,14 +104,12 @@ async function fetchCarData() {
             rawCars = fallbackCars;
         }
 
-        // Mapping data agar properti gambar dan nama aman dibaca (mendukung berbagai variasi nama key dari API)
         carData = rawCars.map((car, index) => ({
             id: car.id || index + 1,
             nama: car.nama || car.name || car.model || 'Mobil Premium',
             merk: car.merk || car.brand || car.manufacturer || 'Showroom',
             harga: Number(car.harga || car.price || 1500000000),
-            // Cek berbagai kemungkinan nama key gambar dari API, jika kosong/tidak ada gunakan Unsplash default
-            gambar: car.gambar || car.image || car.photo || car.image_url || car.foto || 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=800&q=80',
+            gambar: car.gambar || car.image || car.photo || car.image_url || car.foto || SAFE_SVG_CAR,
             deskripsi: car.deskripsi || car.description || 'Mobil berkualitas tinggi dengan performa tangguh dan desain modern.'
         }));
 
@@ -107,7 +122,7 @@ async function fetchCarData() {
         renderCarCards(filteredData);
         hideLoading();
     } catch (err) {
-        console.warn('Gagal memuat API resmi, menggunakan data fallback:', err);
+        console.warn('Gagal memuat API resmi / koneksi timeout, menggunakan data fallback:', err);
         carData = fallbackCars;
         populateBrandFilter(carData);
         filteredData = [...carData];
@@ -138,11 +153,10 @@ function renderCarCards(cars) {
         const carBrand = car.merk;
         const carName = car.nama;
 
-        // Menggunakan event 'onerror' pada tag img agar jika URL gambar dari API broken/tidak valid, otomatis diganti gambar cadangan
         card.innerHTML = `
             <div class="car-card-img-wrapper">
                 <span class="car-brand-tag">${carBrand}</span>
-                <img src="${carImg}" alt="${carName}" class="car-card-img" onerror="this.src='https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=800&q=80'">
+                <img src="${carImg}" alt="${carName}" class="car-card-img" onerror="this.onerror=null; this.src='${SAFE_SVG_CAR}';">
             </div>
             <div class="car-card-body">
                 <h3 class="car-title">${carName}</h3>
@@ -206,7 +220,7 @@ function openDetailModal(car) {
     const formattedPrice = formatRupiah(car.harga);
     
     modalBody.innerHTML = `
-        <img src="${car.gambar}" alt="${car.nama}" class="modal-img" onerror="this.src='https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=800&q=80'">
+        <img src="${car.gambar}" alt="${car.nama}" class="modal-img" onerror="this.onerror=null; this.src='${SAFE_SVG_CAR}';">
         <span class="badge">${car.merk}</span>
         <h2 class="modal-title">${car.nama}</h2>
         <div class="modal-price">${formattedPrice}</div>
