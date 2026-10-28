@@ -55,7 +55,7 @@ body {
     min-height: 100vh;
 }
 
-/* Canvas Background Mode Gelap */
+/* Canvas Background Mode Gelap (Bintang & Bintang Jatuh) */
 #starsCanvas {
     position: fixed;
     top: 0;
@@ -293,10 +293,12 @@ body.dark-theme #starsCanvas {
 
 .hero-img {
     width: 100%;
+    height: 380px;
     border-radius: 1.25rem;
     box-shadow: var(--card-shadow);
     object-fit: cover;
     display: block;
+    background-color: #1e293b;
 }
 
 /* Section Title */
@@ -408,7 +410,7 @@ body.dark-theme #starsCanvas {
 .car-card-img-wrapper {
     position: relative;
     height: 210px;
-    background: #000;
+    background: #0f172a;
     overflow: hidden;
 }
 
@@ -427,7 +429,7 @@ body.dark-theme #starsCanvas {
     position: absolute;
     top: 1rem;
     left: 1rem;
-    background: rgba(15, 23, 42, 0.75);
+    background: rgba(15, 23, 42, 0.85);
     backdrop-filter: blur(8px);
     color: #ffffff;
     padding: 0.3rem 0.75rem;
@@ -436,6 +438,7 @@ body.dark-theme #starsCanvas {
     font-weight: 700;
     letter-spacing: 0.05em;
     text-transform: uppercase;
+    z-index: 2;
 }
 
 .car-card-body {
@@ -626,6 +629,7 @@ body.dark-theme #starsCanvas {
     object-fit: cover;
     border-radius: 0.75rem;
     margin-bottom: 1.5rem;
+    background-color: #0f172a;
 }
 
 .modal-title {
